@@ -1,0 +1,118 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Employee, AppSettings } from '../types/employee';
+
+const STORAGE_KEYS = {
+  EMPLOYEES: 'employees',
+  SETTINGS: 'settings',
+  PIN: 'pin',
+};
+
+export const StorageService = {
+  // Employee operations
+  async getEmployees(): Promise<Employee[]> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.EMPLOYEES);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('Error getting employees:', error);
+      return [];
+    }
+  },
+
+  async saveEmployees(employees: Employee[]): Promise<void> {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+    } catch (error) {
+      console.error('Error saving employees:', error);
+    }
+  },
+
+  async addEmployee(employee: Employee): Promise<void> {
+    const employees = await this.getEmployees();
+    employees.push(employee);
+    await this.saveEmployees(employees);
+  },
+
+  async updateEmployee(updatedEmployee: Employee): Promise<void> {
+    const employees = await this.getEmployees();
+    const index = employees.findIndex(emp => emp.id === updatedEmployee.id);
+    if (index !== -1) {
+      employees[index] = updatedEmployee;
+      await this.saveEmployees(employees);
+    }
+  },
+
+  async deleteEmployee(id: string): Promise<void> {
+    const employees = await this.getEmployees();
+    const filteredEmployees = employees.filter(emp => emp.id !== id);
+    await this.saveEmployees(filteredEmployees);
+  },
+
+  // Settings operations
+  async getSettings(): Promise<AppSettings> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
+      return data ? JSON.parse(data) : {
+        pin: { isEnabled: false, pin: '' },
+        currency: 'ETB'
+      };
+    } catch (error) {
+      console.error('Error getting settings:', error);
+      return {
+        pin: { isEnabled: false, pin: '' },
+        currency: 'ETB'
+      };
+    }
+  },
+
+  async saveSettings(settings: AppSettings): Promise<void> {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
+  },
+
+  // PIN operations
+  async getPin(): Promise<string> {
+    try {
+      const settings = await this.getSettings();
+      return settings.pin.pin;
+    } catch (error) {
+      console.error('Error getting PIN:', error);
+      return '';
+    }
+  },
+
+  async setPin(pin: string): Promise<void> {
+    try {
+      const settings = await this.getSettings();
+      settings.pin.pin = pin;
+      settings.pin.isEnabled = true;
+      await this.saveSettings(settings);
+    } catch (error) {
+      console.error('Error setting PIN:', error);
+    }
+  },
+
+  async isPinEnabled(): Promise<boolean> {
+    try {
+      const settings = await this.getSettings();
+      return settings.pin.isEnabled;
+    } catch (error) {
+      console.error('Error checking PIN status:', error);
+      return false;
+    }
+  },
+
+  async disablePin(): Promise<void> {
+    try {
+      const settings = await this.getSettings();
+      settings.pin.isEnabled = false;
+      settings.pin.pin = '';
+      await this.saveSettings(settings);
+    } catch (error) {
+      console.error('Error disabling PIN:', error);
+    }
+  },
+}; 
