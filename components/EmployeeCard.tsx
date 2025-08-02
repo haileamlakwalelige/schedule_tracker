@@ -137,16 +137,16 @@ export default function EmployeeCard({
       {/* Payment Status */}
       <View className="mb-3">
         <Text className="text-xs text-gray-500 mb-2">Current Month Payment Status</Text>
-        <View className="flex-row space-x-2">
+        <View className="flex-row space-x-2 gap-2">
           <TouchableOpacity
-            className={`flex-1 py-2 px-3 rounded-lg border ${
+            className={`flex-1 py-2 px-3 rounded-lg border mx-3 ${
               paymentStatus === 'paid' 
                 ? 'bg-green-100 border-green-500' 
                 : 'bg-gray-100 border-gray-300'
             }`}
             onPress={handleMarkPaid}
           >
-            <View className="flex-row items-center justify-center">
+            <View className="flex-row items-center justify-center ">
               <Ionicons 
                 name={paymentStatus === 'paid' ? 'checkmark-circle' : 'checkmark-circle-outline'} 
                 size={16} 
@@ -162,7 +162,7 @@ export default function EmployeeCard({
           </TouchableOpacity>
           
           <TouchableOpacity
-            className={`flex-1 py-2 px-3 rounded-lg border ${
+            className={`flex-1 py-2 px-3 rounded-lg border mx-3 ${
               paymentStatus === 'unpaid' 
                 ? 'bg-red-100 border-red-500' 
                 : 'bg-gray-100 border-gray-300'

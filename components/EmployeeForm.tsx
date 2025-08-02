@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Employee } from '../types/employee';
 import { generateId } from '../utils/helpers';
 import GlassButton from './GlassButton';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface EmployeeFormProps {
   employee?: Employee;
@@ -36,6 +37,8 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
   useEffect(() => {
     if (employee) {
@@ -126,6 +129,32 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const formatDateForDisplay = (dateString: string): string => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  };
+
+  const handleDateChange = (field: 'startDate' | 'endDate', event: any, selectedDate?: Date) => {
+    if (event.type === 'dismissed') {
+      if (field === 'startDate') setShowStartDatePicker(false);
+      if (field === 'endDate') setShowEndDatePicker(false);
+      return;
+    }
+
+    if (selectedDate) {
+      const formattedDate = selectedDate.toISOString().split('T')[0];
+      updateFormData(field, formattedDate);
+    }
+
+    if (field === 'startDate') setShowStartDatePicker(false);
+    if (field === 'endDate') setShowEndDatePicker(false);
   };
 
   return (
@@ -249,18 +278,19 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
             {/* Start Date */}
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-2">Start Date *</Text>
-              <TextInput
+              <TouchableOpacity
                 style={{
-                  color: '#111827',
                   backgroundColor: '#F9FAFB',
                   borderColor: errors.startDate ? '#EF4444' : '#E5E7EB',
                 }}
-                className="border rounded-lg p-3"
-                value={formData.startDate}
-                onChangeText={(value) => updateFormData('startDate', value)}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9CA3AF"
-              />
+                className="border rounded-lg p-3 flex-row justify-between items-center"
+                onPress={() => setShowStartDatePicker(true)}
+              >
+                <Text style={{ color: formData.startDate ? '#111827' : '#9CA3AF' }}>
+                  {formData.startDate ? formatDateForDisplay(formData.startDate) : 'Select start date'}
+                </Text>
+                <Ionicons name="calendar" size={20} color="#6B7280" />
+              </TouchableOpacity>
               {errors.startDate && (
                 <Text className="text-red-500 text-xs mt-1">{errors.startDate}</Text>
               )}
@@ -269,18 +299,19 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
             {/* End Date */}
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-2">End Date (Optional)</Text>
-              <TextInput
+              <TouchableOpacity
                 style={{
-                  color: '#111827',
                   backgroundColor: '#F9FAFB',
                   borderColor: '#E5E7EB',
                 }}
-                className="border rounded-lg p-3"
-                value={formData.endDate}
-                onChangeText={(value) => updateFormData('endDate', value)}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9CA3AF"
-              />
+                className="border rounded-lg p-3 flex-row justify-between items-center"
+                onPress={() => setShowEndDatePicker(true)}
+              >
+                <Text style={{ color: formData.endDate ? '#111827' : '#9CA3AF' }}>
+                  {formData.endDate ? formatDateForDisplay(formData.endDate) : 'Select end date'}
+                </Text>
+                <Ionicons name="calendar" size={20} color="#6B7280" />
+              </TouchableOpacity>
             </View>
 
             {/* Email */}
@@ -338,23 +369,44 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
 
             {/* Action Buttons */}
             <View className="flex-row space-x-4">
-              <GlassButton
-                title="Cancel"
-                onPress={onCancel}
-                variant="secondary"
-                style={{ flex: 1 }}
-              />
+              <View className="flex-1 mx-3">
+                <GlassButton
+                  title="Cancel"
+                  onPress={onCancel}
+                  variant="secondary"
+                />
+              </View>
               
-              <GlassButton
-                title={employee ? 'Update' : 'Save'}
-                onPress={handleSave}
-                variant="primary"
-                style={{ flex: 1 }}
-              />
+              <View className="flex-1 mx-3">
+                <GlassButton
+                  title={employee ? 'Update' : 'Save'}
+                  onPress={handleSave}
+                  variant="primary"
+                />
+              </View>
             </View>
           </View>
         </View>
       </ScrollView>
+
+      {/* Date Pickers */}
+      {showStartDatePicker && (
+        <DateTimePicker
+          value={formData.startDate ? new Date(formData.startDate) : new Date()}
+          mode="date"
+          display="default"
+          onChange={(event, date) => handleDateChange('startDate', event, date)}
+        />
+      )}
+
+      {showEndDatePicker && (
+        <DateTimePicker
+          value={formData.endDate ? new Date(formData.endDate) : new Date()}
+          mode="date"
+          display="default"
+          onChange={(event, date) => handleDateChange('endDate', event, date)}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 } 

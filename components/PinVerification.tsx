@@ -4,22 +4,21 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { StorageService } from '../utils/storage';
 import GlassButton from './GlassButton';
-import { useTheme } from '../contexts/ThemeContext';
 
 interface PinVerificationProps {
   onSuccess: () => void;
-  onCancel?: () => void;
+  onCancel: () => void;
 }
 
 export default function PinVerification({ onSuccess, onCancel }: PinVerificationProps) {
-  const { colors, isDark } = useTheme();
   const [pin, setPin] = useState('');
   const [storedPin, setStoredPin] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -29,31 +28,34 @@ export default function PinVerification({ onSuccess, onCancel }: PinVerification
   }, []);
 
   const loadStoredPin = async () => {
-    const pin = await StorageService.getPin();
-    setStoredPin(pin);
-    setIsLoading(false);
+    try {
+      const pin = await StorageService.getPin();
+      setStoredPin(pin);
+    } catch (error) {
+      console.error('Error loading PIN:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePinSubmit = () => {
     if (pin === storedPin) {
       onSuccess();
     } else {
-      Alert.alert('Incorrect PIN', 'Please enter the correct PIN to access the app.');
+      Alert.alert('Invalid PIN', 'Please enter the correct PIN');
       setPin('');
     }
   };
 
   const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    }
+    onCancel();
   };
 
   if (isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
         <View className="flex-1 justify-center items-center">
-          <Text className="text-gray-600 text-lg">Loading...</Text>
+          <Text className="text-gray-500 text-lg">Loading...</Text>
         </View>
       </SafeAreaView>
     );
@@ -61,7 +63,7 @@ export default function PinVerification({ onSuccess, onCancel }: PinVerification
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
@@ -73,7 +75,7 @@ export default function PinVerification({ onSuccess, onCancel }: PinVerification
             <Text className="text-gray-600 text-center mb-8">
               Please enter your PIN to access the app
             </Text>
-            
+
             <TextInput
               style={{
                 color: '#111827',
@@ -96,21 +98,18 @@ export default function PinVerification({ onSuccess, onCancel }: PinVerification
               maxLength={4}
               autoFocus
             />
-            
-            <View className="flex-row space-x-3">
-              <GlassButton
-                title="Cancel"
-                onPress={handleCancel}
-                variant="secondary"
-                style={{ flex: 1 }}
-              />
-              
-              <GlassButton
-                title="Submit"
-                onPress={handlePinSubmit}
-                variant="primary"
-                style={{ flex: 1 }}
-              />
+
+            <View className="flex-row space-x-4">
+              <View className="flex-1 mx-3">
+                <TouchableOpacity onPress={handleCancel}>
+                  <Text className="text-gray-900 text-center text-lg bg-gray-200 p-4 rounded-2xl">Cancel</Text>
+                </TouchableOpacity>
+              </View>
+              <View className="flex-1 mx-3">
+                <TouchableOpacity onPress={handlePinSubmit}>
+                  <Text className="text-white text-center text-lg bg-blue-500 p-4 rounded-2xl">Submit</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>

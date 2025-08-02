@@ -111,9 +111,9 @@ export const markAsPaid = (employee: Employee, month: string, amount: number, no
   
   if (existingPayment) {
     // Update existing payment
-    const updatedHistory = employee.paymentHistory.map(p => 
+    const updatedHistory: PaymentRecord[] = employee.paymentHistory.map(p => 
       p.month === month 
-        ? { ...p, status: 'paid', paidDate: new Date().toISOString(), amount, notes }
+        ? { ...p, status: 'paid' as const, paidDate: new Date().toISOString(), amount, notes }
         : p
     );
     return { ...employee, paymentHistory: updatedHistory };
@@ -135,9 +135,9 @@ export const markAsPaid = (employee: Employee, month: string, amount: number, no
 };
 
 export const markAsUnpaid = (employee: Employee, month: string): Employee => {
-  const updatedHistory = employee.paymentHistory.map(p => 
+  const updatedHistory: PaymentRecord[] = employee.paymentHistory.map(p => 
     p.month === month 
-      ? { ...p, status: 'unpaid', paidDate: '' }
+      ? { ...p, status: 'unpaid' as const, paidDate: '' }
       : p
   );
   return { ...employee, paymentHistory: updatedHistory };

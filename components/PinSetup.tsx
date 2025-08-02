@@ -4,23 +4,20 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { StorageService } from '../utils/storage';
 import GlassButton from './GlassButton';
-import { useTheme } from '../contexts/ThemeContext';
 
 interface PinSetupProps {
   onComplete: () => void;
 }
 
 export default function PinSetup({ onComplete }: PinSetupProps) {
-  const { colors, isDark } = useTheme();
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [step, setStep] = useState<'setup' | 'confirm'>('setup');
@@ -40,8 +37,7 @@ export default function PinSetup({ onComplete }: PinSetupProps) {
     }
 
     if (pin !== confirmPin) {
-      Alert.alert('PIN Mismatch', 'PINs do not match. Please try again.');
-      setConfirmPin('');
+      Alert.alert('PIN Mismatch', 'PINs do not match');
       return;
     }
 
@@ -58,17 +54,17 @@ export default function PinSetup({ onComplete }: PinSetupProps) {
   const handleSkip = () => {
     Alert.alert(
       'Skip PIN Setup',
-      'You can set up PIN protection later in the settings. Are you sure you want to skip?',
+      'Are you sure you want to skip PIN setup? You can set it up later in settings.',
       [
-        { text: 'Set PIN Later', onPress: onComplete },
-        { text: 'Continue Setup', style: 'cancel' }
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Skip', onPress: onComplete }
       ]
     );
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
@@ -80,7 +76,7 @@ export default function PinSetup({ onComplete }: PinSetupProps) {
             <Text className="text-gray-600 text-center mb-8">
               Set up a PIN to protect your employee data
             </Text>
-            
+
             {step === 'setup' ? (
               <>
                 <Text className="text-gray-900 text-lg font-semibold mb-4 text-center">
@@ -108,21 +104,21 @@ export default function PinSetup({ onComplete }: PinSetupProps) {
                   maxLength={4}
                   autoFocus
                 />
-                
-                <View className="flex-row space-x-3 mb-4">
-                  <GlassButton
-                    title="Skip"
-                    onPress={handleSkip}
-                    variant="secondary"
-                    style={{ flex: 1 }}
-                  />
-                  
-                  <GlassButton
-                    title="Continue"
-                    onPress={handleSetupPin}
-                    variant="primary"
-                    style={{ flex: 1 }}
-                  />
+                <View className="flex-row space-x-4 mb-4">
+                  <View className="flex-1 mx-3">
+                    <GlassButton
+                      title="Skip"
+                      onPress={handleSkip}
+                      variant="secondary"
+                    />
+                  </View>
+                  <View className="flex-1 mx-3">
+                    <GlassButton
+                      title="Continue"
+                      onPress={handleSetupPin}
+                      variant="primary"
+                    />
+                  </View>
                 </View>
               </>
             ) : (
@@ -152,21 +148,21 @@ export default function PinSetup({ onComplete }: PinSetupProps) {
                   maxLength={4}
                   autoFocus
                 />
-                
-                <View className="flex-row space-x-3">
-                  <GlassButton
-                    title="Back"
-                    onPress={() => setStep('setup')}
-                    variant="secondary"
-                    style={{ flex: 1 }}
-                  />
-                  
-                  <GlassButton
-                    title="Confirm"
-                    onPress={handleConfirmPin}
-                    variant="primary"
-                    style={{ flex: 1 }}
-                  />
+                <View className="flex-row space-x-4">
+                  <View className="flex-1 mx-3">
+                    <GlassButton
+                      title="Back"
+                      onPress={() => setStep('setup')}
+                      variant="secondary"
+                    />
+                  </View>
+                  <View className="flex-1 mx-3">
+                    <GlassButton
+                      title="Confirm"
+                      onPress={handleConfirmPin}
+                      variant="primary"
+                    />
+                  </View>
                 </View>
               </>
             )}

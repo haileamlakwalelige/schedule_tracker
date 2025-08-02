@@ -183,19 +183,21 @@ export default function SettingsScreen() {
             </View>
             
             <View className="flex-row space-x-4">
-              <GlassButton
-                title="Cancel"
-                onPress={handleCancelPin}
-                variant="secondary"
-                style={{ flex: 1 }}
-              />
+              <View className="flex-1 mx-3">
+                <GlassButton
+                  title="Cancel"
+                  onPress={handleCancelPin}
+                  variant="secondary"
+                />
+              </View>
               
-              <GlassButton
-                title="Set PIN"
-                onPress={handleSetPin}
-                variant="primary"
-                style={{ flex: 1 }}
-              />
+              <View className="flex-1 mx-3">
+                <GlassButton
+                  title="Set PIN"
+                  onPress={handleSetPin}
+                  variant="primary"
+                />
+              </View>
             </View>
           </View>
         )}
@@ -214,7 +216,7 @@ export default function SettingsScreen() {
                 {(['ETB', 'USD'] as const).map((currency) => (
                   <TouchableOpacity
                     key={currency}
-                    className={`flex-1 py-3 px-4 rounded-lg border`}
+                    className={`flex-1 py-3 px-4 rounded-lg border mx-3 text-gray-900`}
                     style={{
                       backgroundColor: settings.currency === currency ? '#3B82F6' : '#F3F4F6',
                       borderColor: settings.currency === currency ? '#3B82F6' : '#E5E7EB',

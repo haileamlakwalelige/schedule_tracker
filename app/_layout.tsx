@@ -1,48 +1,59 @@
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import 'react-native-reanimated';
 import "../global.css"
-import { ThemeProvider } from '../contexts/ThemeContext';
-import { useColorScheme } from '@/hooks/useColorScheme';
+
+export {
+  // Catch any errors thrown by the Layout component.
+  ErrorBoundary,
+} from 'expo-router';
+
+export const unstable_settings = {
+  // Ensure that reloading on `/modal` keeps a back button present.
+  initialRouteName: '(tabs)',
+};
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
+  const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
+  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  useEffect(() => {
+    if (error) throw error;
+  }, [error]);
+
+  useEffect(() => {
+    if (loaded) {
+      // Hide splash screen after fonts are loaded
+      SplashScreen.hideAsync().then(() => {
+        // Add a small delay to ensure smooth transition
+        setTimeout(() => {
+          setIsSplashVisible(false);
+        }, 500);
+      });
+    }
+  }, [loaded]);
+
+  if (!loaded || isSplashVisible) {
+    return <View style={{ flex: 1, backgroundColor: '#FFFFFF' }} />;
   }
 
   return (
-    <ThemeProvider>
-      <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen 
-            name="add-employee" 
-            options={{ 
-              title: 'Add Employee',
-              headerShown: true,
-              presentation: 'modal'
-            }} 
-          />
-          <Stack.Screen 
-            name="edit-employee" 
-            options={{ 
-              title: 'Edit Employee',
-              headerShown: true,
-              presentation: 'modal'
-            }} 
-          />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </NavigationThemeProvider>
-    </ThemeProvider>
+    <NavigationThemeProvider value={DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="add-employee" options={{ presentation: 'modal', title: 'Add Employee' }} />
+        <Stack.Screen name="edit-employee" options={{ presentation: 'modal', title: 'Edit Employee' }} />
+      </Stack>
+    </NavigationThemeProvider>
   );
 }
