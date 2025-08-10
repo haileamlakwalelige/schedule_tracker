@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Alert, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { StorageService } from '../utils/storage';
 import EmployeeForm from '../components/EmployeeForm';
 import { Employee } from '../types/employee';
@@ -45,8 +45,12 @@ export default function EditEmployeeScreen() {
   const handleSave = async (updatedEmployee: Employee) => {
     try {
       await StorageService.updateEmployee(updatedEmployee);
+      // Show success message briefly then navigate back
       Alert.alert('Success', 'Employee updated successfully', [
-        { text: 'OK', onPress: () => router.back() }
+        { text: 'OK', onPress: () => {
+          router.back();
+          // The main page will automatically refresh when it comes into focus
+        }}
       ]);
     } catch (error) {
       Alert.alert('Error', 'Failed to update employee');

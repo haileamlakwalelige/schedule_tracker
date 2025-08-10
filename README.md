@@ -1,13 +1,13 @@
-# Employee Salary Manager
+# Employee Salary Management
 
-A comprehensive React Native mobile application for managing employee salary data with PIN protection and local storage.
+A comprehensive React Native mobile application for managing employee salary data with local storage.
 
 ## Features
 
 ### 🔐 Security
-- **PIN Protection**: Optional 4-digit PIN to secure your employee data
-- **First-time Setup**: Guided PIN setup for new users
-- **Settings Management**: Easy PIN configuration and changes
+- **Local Storage**: All data stored securely on device
+- **Data Privacy**: Complete control over your employee data
+- **Settings Management**: Easy configuration and changes
 
 ### 👥 Employee Management
 - **Add Employees**: Complete employee information with validation
@@ -60,9 +60,7 @@ A comprehensive React Native mobile application for managing employee salary dat
 - Validation and error handling
 
 ### 4. Settings
-- PIN management (enable/disable/change)
-- Theme selection (Light/Dark/Auto)
-- Currency selection
+- Currency selection (ETB/USD)
 - Data management options
 - App information
 

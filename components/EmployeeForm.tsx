@@ -15,6 +15,7 @@ import { Employee } from '../types/employee';
 import { generateId } from '../utils/helpers';
 import GlassButton from './GlassButton';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AppLogo from './AppLogo';
 
 interface EmployeeFormProps {
   employee?: Employee;
@@ -28,7 +29,6 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
     position: '',
     department: '',
     salary: '',
-    salaryDate: '',
     startDate: '',
     endDate: '',
     email: '',
@@ -47,7 +47,6 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
         position: employee.position,
         department: employee.department,
         salary: employee.salary.toString(),
-        salaryDate: employee.salaryDate.toString(),
         startDate: employee.startDate,
         endDate: employee.endDate || '',
         email: employee.email || '',
@@ -78,13 +77,8 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
       newErrors.salary = 'Salary must be a positive number';
     }
 
-    if (!formData.salaryDate.trim()) {
-      newErrors.salaryDate = 'Salary date is required';
-    } else {
-      const salaryDay = Number(formData.salaryDate);
-      if (isNaN(salaryDay) || salaryDay < 1 || salaryDay > 31) {
-        newErrors.salaryDate = 'Salary date must be between 1 and 31';
-      }
+    if (!formData.endDate.trim()) {
+      newErrors.endDate = 'End date is required for salary cycle';
     }
 
     if (!formData.startDate.trim()) {
@@ -110,9 +104,9 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
       position: formData.position.trim(),
       department: formData.department.trim(),
       salary: Number(formData.salary),
-      salaryDate: Number(formData.salaryDate),
+      salaryDate: 1, // Default value since we're not using it anymore
       startDate: formData.startDate,
-      endDate: formData.endDate || undefined,
+      endDate: formData.endDate,
       email: formData.email.trim() || undefined,
       phone: formData.phone.trim() || undefined,
       isActive: formData.isActive,
@@ -168,7 +162,13 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
             className="rounded-2xl p-6 mb-4"
             style={{ backgroundColor: '#FFFFFF' }}
           >
-            <Text className="text-2xl font-bold text-gray-900 mb-6">
+            <View className="flex-row items-center mb-6">
+              <AppLogo size="small" showText={false} />
+              <Text className="text-2xl font-bold text-gray-900 ml-3">
+                Employee Salary Management
+              </Text>
+            </View>
+            <Text className="text-lg font-semibold text-gray-700 mb-6">
               {employee ? 'Edit Employee' : 'Add New Employee'}
             </Text>
 
@@ -253,27 +253,7 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
               )}
             </View>
 
-            {/* Salary Date */}
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">Salary Date (Day of month) *</Text>
-              <TextInput
-                style={{
-                  color: '#111827',
-                  backgroundColor: '#F9FAFB',
-                  borderColor: errors.salaryDate ? '#EF4444' : '#E5E7EB',
-                }}
-                className="border rounded-lg p-3"
-                value={formData.salaryDate}
-                onChangeText={(value) => updateFormData('salaryDate', value)}
-                placeholder="Enter day (1-31)"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="numeric"
-                maxLength={2}
-              />
-              {errors.salaryDate && (
-                <Text className="text-red-500 text-xs mt-1">{errors.salaryDate}</Text>
-              )}
-            </View>
+
 
             {/* Start Date */}
             <View className="mb-4">
@@ -298,11 +278,11 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
 
             {/* End Date */}
             <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">End Date (Optional)</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-2">End Date (Salary Cycle End) *</Text>
               <TouchableOpacity
                 style={{
                   backgroundColor: '#F9FAFB',
-                  borderColor: '#E5E7EB',
+                  borderColor: errors.endDate ? '#EF4444' : '#E5E7EB',
                 }}
                 className="border rounded-lg p-3 flex-row justify-between items-center"
                 onPress={() => setShowEndDatePicker(true)}
@@ -312,6 +292,9 @@ export default function EmployeeForm({ employee, onSave, onCancel }: EmployeeFor
                 </Text>
                 <Ionicons name="calendar" size={20} color="#6B7280" />
               </TouchableOpacity>
+              {errors.endDate && (
+                <Text className="text-red-500 text-xs mt-1">{errors.endDate}</Text>
+              )}
             </View>
 
             {/* Email */}

@@ -4,7 +4,6 @@ import { Employee, AppSettings } from '../types/employee';
 const STORAGE_KEYS = {
   EMPLOYEES: 'employees',
   SETTINGS: 'settings',
-  PIN: 'pin',
 };
 
 export const StorageService = {
@@ -53,13 +52,11 @@ export const StorageService = {
     try {
       const data = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
       return data ? JSON.parse(data) : {
-        pin: { isEnabled: false, pin: '' },
         currency: 'ETB'
       };
     } catch (error) {
       console.error('Error getting settings:', error);
       return {
-        pin: { isEnabled: false, pin: '' },
         currency: 'ETB'
       };
     }
@@ -73,46 +70,5 @@ export const StorageService = {
     }
   },
 
-  // PIN operations
-  async getPin(): Promise<string> {
-    try {
-      const settings = await this.getSettings();
-      return settings.pin.pin;
-    } catch (error) {
-      console.error('Error getting PIN:', error);
-      return '';
-    }
-  },
 
-  async setPin(pin: string): Promise<void> {
-    try {
-      const settings = await this.getSettings();
-      settings.pin.pin = pin;
-      settings.pin.isEnabled = true;
-      await this.saveSettings(settings);
-    } catch (error) {
-      console.error('Error setting PIN:', error);
-    }
-  },
-
-  async isPinEnabled(): Promise<boolean> {
-    try {
-      const settings = await this.getSettings();
-      return settings.pin.isEnabled;
-    } catch (error) {
-      console.error('Error checking PIN status:', error);
-      return false;
-    }
-  },
-
-  async disablePin(): Promise<void> {
-    try {
-      const settings = await this.getSettings();
-      settings.pin.isEnabled = false;
-      settings.pin.pin = '';
-      await this.saveSettings(settings);
-    } catch (error) {
-      console.error('Error disabling PIN:', error);
-    }
-  },
 }; 

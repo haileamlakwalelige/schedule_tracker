@@ -10,15 +10,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Employee } from '../../types/employee';
 import { StorageService } from '../../utils/storage';
 import { formatCurrency, calculateTotalSalary, searchEmployees, markAsPaid, markAsUnpaid, getCurrentMonth } from '../../utils/helpers';
 import EmployeeCard from '../../components/EmployeeCard';
-import PinVerification from '../../components/PinVerification';
-import PinSetup from '../../components/PinSetup';
 import SplashScreen from '../../components/SplashScreen';
 import GlassButton from '../../components/GlassButton';
+import AppLogo from '../../components/AppLogo';
 
 export default function EmployeeListScreen() {
   const router = useRouter();
@@ -26,17 +26,14 @@ export default function EmployeeListScreen() {
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [showPinVerification, setShowPinVerification] = useState(false);
-  const [showPinSetup, setShowPinSetup] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
-      checkPinAndLoadData();
-    }, 1000);
+      loadEmployees();
+    }, 2000); // Increased from 1000ms to 2000ms for longer splash screen
 
     return () => clearTimeout(timer);
   }, []);
@@ -50,20 +47,15 @@ export default function EmployeeListScreen() {
     }
   }, [searchQuery, employees]);
 
-  const checkPinAndLoadData = async () => {
-    const isPinEnabled = await StorageService.isPinEnabled();
-    const employees = await StorageService.getEmployees();
-    
-    if (isPinEnabled) {
-      setShowPinVerification(true);
-    } else if (employees.length === 0) {
-      // First time user - show PIN setup
-      setShowPinSetup(true);
-    } else {
-      setIsAuthenticated(true);
-      loadEmployees();
-    }
-  };
+  // Auto-refresh when the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      // Only refresh if not in splash screen and not loading
+      if (!showSplash && !isLoading) {
+        loadEmployees();
+      }
+    }, [showSplash, isLoading])
+  );
 
   const loadEmployees = async () => {
     try {
@@ -75,23 +67,6 @@ export default function EmployeeListScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handlePinSuccess = () => {
-    setShowPinVerification(false);
-    setIsAuthenticated(true);
-    loadEmployees();
-  };
-
-  const handlePinCancel = () => {
-    // In a real app, you might want to exit the app or show a different screen
-    Alert.alert('Access Denied', 'PIN is required to access the app');
-  };
-
-  const handlePinSetupComplete = () => {
-    setShowPinSetup(false);
-    setIsAuthenticated(true);
-    loadEmployees();
   };
 
   const handleRefresh = async () => {
@@ -153,131 +128,167 @@ export default function EmployeeListScreen() {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
 
-  if (showPinVerification) {
-    return (
-      <PinVerification
-        onSuccess={handlePinSuccess}
-        onCancel={handlePinCancel}
-      />
-    );
-  }
-
-  if (showPinSetup) {
-    return (
-      <PinSetup
-        onComplete={handlePinSetupComplete}
-      />
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-gray-600 text-lg">Loading...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      {/* Header */}
-      <View className="bg-white px-4 py-4 border-b border-gray-200">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-2xl font-bold text-gray-900">
-            Employee Salary Manager
-          </Text>
-        </View>
-        
-        {/* Search Bar */}
-        <View className="flex-row items-center bg-gray-50 rounded-xl px-3 py-2">
-          <Ionicons name="search" size={20} color="#6B7280" />
-          <TextInput
-            className="flex-1 ml-2 text-gray-900"
-            placeholder="Search employees..."
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color="#6B7280" />
+    <LinearGradient
+      colors={['#667eea', '#764ba2']}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Header */}
+        <View className="px-6 py-6">
+          <View className="flex-row justify-between items-center mb-6">
+            <View className="flex-row items-center">
+              <AppLogo size="small" showText={false} />
+              <View className="ml-4">
+                <Text className="text-white text-2xl font-bold">
+                  Employee Salary
+                </Text>
+                <Text className="text-white/80 text-lg">
+                  Management
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              className="w-12 h-12 bg-white/20 rounded-full justify-center items-center backdrop-blur-sm"
+              onPress={handleRefresh}
+            >
+              <Ionicons name="refresh" size={20} color="white" />
             </TouchableOpacity>
+          </View>
+          
+          {/* Search Bar */}
+          <View className="flex-row items-center bg-white/20 rounded-2xl px-4 py-3 backdrop-blur-sm border border-white/30">
+            <Ionicons name="search" size={20} color="white" />
+            <TextInput
+              className="flex-1 ml-3 text-white placeholder-white/70"
+              placeholder="Search employees..."
+              placeholderTextColor="rgba(255, 255, 255, 0.7)"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color="white" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Statistics Cards */}
+        <View className="px-6 mb-6">
+          <View className="flex-row space-x-4 gap-3">
+            <View className="flex-1 bg-white/20 rounded-2xl p-4 backdrop-blur-sm border border-white/30">
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="people" size={20} color="white" />
+                <Text className="text-white/60 text-xs">Total</Text>
+              </View>
+              <Text className="text-white text-2xl font-bold">{employees.length}</Text>
+              <Text className="text-white/60 text-xs">Employees</Text>
+            </View>
+            
+            <View className="flex-1 bg-white/20 rounded-2xl p-4 backdrop-blur-sm border border-white/30">
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="checkmark-circle" size={20} color="#4ade80" />
+                <Text className="text-white/60 text-xs">Active</Text>
+              </View>
+              <Text className="text-white text-2xl font-bold">{activeEmployees.length}</Text>
+              <Text className="text-white/60 text-xs">Working</Text>
+            </View>
+            
+            <View className="flex-1 bg-white/20 rounded-2xl p-4 backdrop-blur-sm border border-white/30">
+              <View className="flex-row items-center justify-between mb-2">
+                <Ionicons name="close-circle" size={20} color="#f87171" />
+                <Text className="text-white/60 text-xs">Inactive</Text>
+              </View>
+              <Text className="text-white text-2xl font-bold">{inactiveEmployees.length}</Text>
+              <Text className="text-white/60 text-xs">Employees</Text>
+            </View>
+          </View>
+          
+          {/* Total Salary Line */}
+          <View className="mt-4 flex-row items-center justify-between bg-white/20 rounded-xl px-4 py-3 backdrop-blur-sm border border-white/30">
+            <View className="flex-row items-center">
+              <Ionicons name="cash" size={20} color="#fbbf24" />
+              <Text className="text-white/80 text-base font-medium ml-2">Total Salary <Text className="text-white/60 text-xs">/ Month</Text></Text>
+            </View>
+            <Text className="text-white text-xl font-bold">
+              {formatCurrency(totalSalary, 'ETB')}
+            </Text>
+          </View>
+        </View>
+
+        {/* Employee List */}
+        <View className="flex-1 px-6 pb-32">
+          {isLoading ? (
+            <View className="flex-1 justify-center items-center">
+              <View className="w-16 h-16 bg-white/20 rounded-full justify-center items-center backdrop-blur-sm mb-4">
+                <Ionicons name="people" size={32} color="white" />
+              </View>
+              <Text className="text-white/80 text-lg">Loading employees...</Text>
+            </View>
+          ) : filteredEmployees.length === 0 ? (
+            <View className="flex-1 justify-center items-center">
+              <View className="w-24 h-24 bg-white/20 rounded-full justify-center items-center backdrop-blur-sm mb-6">
+                <Ionicons name="people-outline" size={48} color="white" />
+              </View>
+              <Text className="text-white text-xl font-semibold mb-2">
+                {searchQuery ? 'No employees found' : 'No employees yet'}
+              </Text>
+              <Text className="text-white/70 text-center px-8">
+                {searchQuery ? 'Try adjusting your search' : 'Add your first employee to get started'}
+              </Text>
+              {!searchQuery && (
+                <TouchableOpacity
+                  className="mt-6 bg-white/20 rounded-full px-6 py-3 backdrop-blur-sm border border-white/30"
+                  onPress={handleAddEmployee}
+                >
+                  <Text className="text-white font-semibold">Add First Employee</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <FlatList
+              data={filteredEmployees}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <EmployeeCard
+                  employee={item}
+                  onEdit={handleEditEmployee}
+                  onDelete={handleDeleteEmployee}
+                  onMarkPaid={handleMarkPaid}
+                  onMarkUnpaid={handleMarkUnpaid}
+                />
+              )}
+              refreshControl={
+                <RefreshControl 
+                  refreshing={refreshing} 
+                  onRefresh={handleRefresh}
+                  tintColor="white"
+                  colors={["white"]}
+                />
+              }
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            />
           )}
         </View>
-      </View>
 
-      {/* Statistics */}
-      <View className="bg-white mx-4 mt-4 rounded-2xl p-4 shadow-sm border border-gray-100">
-        <View className="flex-row justify-between mb-4">
-          <View className="flex-1">
-            <Text className="text-sm text-gray-500">Total Employees</Text>
-            <Text className="text-2xl font-bold text-gray-900">{employees.length}</Text>
-          </View>
-          <View className="flex-1">
-            <Text className="text-sm text-gray-500">Active</Text>
-            <Text className="text-2xl font-bold text-green-600">{activeEmployees.length}</Text>
-          </View>
-          <View className="flex-1">
-            <Text className="text-sm text-gray-500">Inactive</Text>
-            <Text className="text-2xl font-bold text-red-600">{inactiveEmployees.length}</Text>
-          </View>
-        </View>
-        
-        <View className="border-t border-gray-200 pt-4">
-          <Text className="text-sm text-gray-500">Total Salary</Text>
-          <Text className="text-2xl font-bold text-blue-600">
-            {formatCurrency(totalSalary, 'ETB')}
-          </Text>
-        </View>
-      </View>
-
-      {/* Employee List */}
-      <View className="flex-1 px-4 mt-4 pb-32">
-        {isLoading ? (
-          <View className="flex-1 justify-center items-center">
-            <Text className="text-gray-500 text-lg">Loading employees...</Text>
-          </View>
-        ) : filteredEmployees.length === 0 ? (
-          <View className="flex-1 justify-center items-center">
-            <Ionicons name="people-outline" size={64} color="#9CA3AF" />
-            <Text className="text-gray-500 text-lg mt-4">
-              {searchQuery ? 'No employees found' : 'No employees yet'}
-            </Text>
-            <Text className="text-gray-400 text-sm mt-2">
-              {searchQuery ? 'Try adjusting your search' : 'Add your first employee to get started'}
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={filteredEmployees}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <EmployeeCard
-                employee={item}
-                onEdit={handleEditEmployee}
-                onDelete={handleDeleteEmployee}
-                onMarkPaid={handleMarkPaid}
-                onMarkUnpaid={handleMarkUnpaid}
-              />
-            )}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-            }
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-      </View>
-
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        className="absolute bottom-32 right-6 w-14 h-14 rounded-full justify-center items-center shadow-lg"
-        style={{ backgroundColor: '#3B82F6' }}
-        onPress={handleAddEmployee}
-      >
-        <Ionicons name="add" size={24} color="white" />
-      </TouchableOpacity>
-    </SafeAreaView>
+        {/* Floating Action Button */}
+        <TouchableOpacity
+          className="absolute bottom-32 right-6 w-16 h-16 rounded-full justify-center items-center shadow-2xl"
+          style={{ 
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.3,
+            shadowRadius: 16,
+            elevation: 16,
+          }}
+          onPress={handleAddEmployee}
+        >
+          <Ionicons name="add" size={28} color="#667eea" />
+        </TouchableOpacity>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

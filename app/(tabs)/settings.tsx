@@ -13,15 +13,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { StorageService } from '../../utils/storage';
 import { AppSettings } from '../../types/employee';
 import GlassButton from '../../components/GlassButton';
+import AppLogo from '../../components/AppLogo';
 
 export default function SettingsScreen() {
   const [settings, setSettings] = useState<AppSettings>({
-    pin: { isEnabled: false, pin: '' },
     currency: 'ETB'
   });
-  const [newPin, setNewPin] = useState('');
-  const [confirmPin, setConfirmPin] = useState('');
-  const [showPinForm, setShowPinForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -39,62 +36,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const handlePinToggle = async (enabled: boolean) => {
-    if (enabled) {
-      setShowPinForm(true);
-    } else {
-      Alert.alert(
-        'Disable PIN',
-        'Are you sure you want to disable PIN protection?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Disable', 
-            style: 'destructive',
-            onPress: async () => {
-              await StorageService.disablePin();
-              setSettings(prev => ({
-                ...prev,
-                pin: { isEnabled: false, pin: '' }
-              }));
-            }
-          }
-        ]
-      );
-    }
-  };
 
-  const handleSetPin = async () => {
-    if (newPin.length !== 4) {
-      Alert.alert('Invalid PIN', 'PIN must be exactly 4 digits');
-      return;
-    }
-
-    if (newPin !== confirmPin) {
-      Alert.alert('PIN Mismatch', 'PINs do not match');
-      return;
-    }
-
-    try {
-      await StorageService.setPin(newPin);
-      setSettings(prev => ({
-        ...prev,
-        pin: { isEnabled: true, pin: newPin }
-      }));
-      setShowPinForm(false);
-      setNewPin('');
-      setConfirmPin('');
-      Alert.alert('Success', 'PIN has been set successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to set PIN');
-    }
-  };
-
-  const handleCancelPin = () => {
-    setShowPinForm(false);
-    setNewPin('');
-    setConfirmPin('');
-  };
 
   const handleChangeCurrency = async (currency: 'ETB' | 'USD') => {
     try {
@@ -122,85 +64,14 @@ export default function SettingsScreen() {
       <ScrollView style={{ flex: 1, backgroundColor: '#FFFFFF' }} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Header */}
         <View className="bg-white px-4 py-4 border-b border-gray-200">
-          <Text className="text-2xl font-bold text-gray-900">Settings</Text>
+          <View className="flex-row items-center mb-2">
+            <AppLogo size="small" showText={false} />
+            <Text className="text-2xl font-bold text-gray-900 ml-3">Employee Salary Management</Text>
+          </View>
+          <Text className="text-gray-600 text-sm">Settings & Configuration</Text>
         </View>
 
-        {/* Security Section */}
-        <View className="bg-white mt-4 mx-4 rounded-2xl shadow-sm border border-gray-100">
-          <View className="p-4 border-b border-gray-200">
-            <Text className="text-lg font-semibold text-gray-900">Security</Text>
-          </View>
-          
-          <View className="p-4">
-            <View className="flex-row justify-between items-center">
-              <View className="flex-1">
-                <Text className="text-gray-900 font-medium">PIN Protection</Text>
-                <Text className="text-gray-500 text-sm">
-                  Require PIN to access the app
-                </Text>
-              </View>
-              <Switch
-                value={settings.pin.isEnabled}
-                onValueChange={handlePinToggle}
-                trackColor={{ false: '#E5E7EB', true: '#3B82F6' }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
-          </View>
-        </View>
 
-        {/* PIN Form */}
-        {showPinForm && (
-          <View className="bg-white mt-4 mx-4 rounded-2xl shadow-sm border border-gray-100 p-4">
-            <Text className="text-lg font-semibold text-gray-900 mb-4">Set PIN</Text>
-            
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">New PIN (4 digits)</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3 text-gray-900 bg-gray-50"
-                value={newPin}
-                onChangeText={setNewPin}
-                placeholder="Enter 4-digit PIN"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="numeric"
-                secureTextEntry
-                maxLength={4}
-              />
-            </View>
-            
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">Confirm PIN</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3 text-gray-900 bg-gray-50"
-                value={confirmPin}
-                onChangeText={setConfirmPin}
-                placeholder="Confirm 4-digit PIN"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="numeric"
-                secureTextEntry
-                maxLength={4}
-              />
-            </View>
-            
-            <View className="flex-row space-x-4">
-              <View className="flex-1 mx-3">
-                <GlassButton
-                  title="Cancel"
-                  onPress={handleCancelPin}
-                  variant="secondary"
-                />
-              </View>
-              
-              <View className="flex-1 mx-3">
-                <GlassButton
-                  title="Set PIN"
-                  onPress={handleSetPin}
-                  variant="primary"
-                />
-              </View>
-            </View>
-          </View>
-        )}
 
         {/* App Settings */}
         <View className="bg-white mt-4 mx-4 rounded-2xl shadow-sm border border-gray-100">

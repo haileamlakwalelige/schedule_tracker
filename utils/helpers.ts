@@ -51,28 +51,73 @@ export const searchEmployees = (employees: Employee[], query: string): Employee[
   );
 };
 
-// Salary date calculation functions
-export const getDaysUntilSalary = (salaryDate: number): number => {
+// Salary cycle calculation functions based on start and end dates
+export const getCurrentSalaryCycle = (startDate: string, endDate: string): {
+  currentStart: string;
+  currentEnd: string;
+  isActive: boolean;
+} => {
   const today = new Date();
-  const currentDay = today.getDate();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
+  const start = new Date(startDate);
+  const end = new Date(endDate);
   
-  let nextSalaryDate = new Date(currentYear, currentMonth, salaryDate);
-  
-  // If salary date has passed this month, calculate for next month
-  if (currentDay > salaryDate) {
-    nextSalaryDate = new Date(currentYear, currentMonth + 1, salaryDate);
+  // If today is within the current cycle
+  if (today >= start && today <= end) {
+    return {
+      currentStart: startDate,
+      currentEnd: endDate,
+      isActive: true
+    };
   }
   
-  const diffTime = nextSalaryDate.getTime() - today.getTime();
+  // If today is after the end date, calculate next cycle
+  if (today > end) {
+    const cycleDuration = end.getTime() - start.getTime();
+    const daysDiff = Math.ceil(cycleDuration / (1000 * 60 * 60 * 24));
+    
+    // Calculate next cycle start (from previous end date)
+    const nextStart = new Date(end);
+    nextStart.setDate(end.getDate() + 1); // Start from day after previous end
+    
+    // Calculate next cycle end
+    const nextEnd = new Date(nextStart);
+    nextEnd.setDate(nextStart.getDate() + daysDiff - 1); // Subtract 1 to maintain same duration
+    
+    return {
+      currentStart: nextStart.toISOString().split('T')[0],
+      currentEnd: nextEnd.toISOString().split('T')[0],
+      isActive: true
+    };
+  }
+  
+  // If today is before the start date
+  return {
+    currentStart: startDate,
+    currentEnd: endDate,
+    isActive: false
+  };
+};
+
+export const getDaysUntilSalary = (startDate: string, endDate: string): number => {
+  const cycle = getCurrentSalaryCycle(startDate, endDate);
+  const today = new Date();
+  const salaryEndDate = new Date(cycle.currentEnd);
+  
+  const diffTime = salaryEndDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
   return diffDays;
 };
 
-export const getSalaryDateText = (salaryDate: number): string => {
-  const daysLeft = getDaysUntilSalary(salaryDate);
+export const getSalaryDateText = (startDate: string, endDate: string): string => {
+  const daysLeft = getDaysUntilSalary(startDate, endDate);
+  const cycle = getCurrentSalaryCycle(startDate, endDate);
+  
+  if (!cycle.isActive) {
+    const start = new Date(cycle.currentStart);
+    const daysUntilStart = Math.ceil((start.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    return `Salary cycle starts in ${daysUntilStart} days`;
+  }
   
   if (daysLeft === 0) {
     return 'Salary day is today!';
@@ -83,6 +128,34 @@ export const getSalaryDateText = (salaryDate: number): string => {
   } else {
     return `${daysLeft} days until salary`;
   }
+};
+
+export const getSalaryCycleInfo = (startDate: string, endDate: string): {
+  cycleStart: string;
+  cycleEnd: string;
+  totalDays: number;
+  daysRemaining: number;
+  progress: number;
+  isActive: boolean;
+} => {
+  const cycle = getCurrentSalaryCycle(startDate, endDate);
+  const today = new Date();
+  const start = new Date(cycle.currentStart);
+  const end = new Date(cycle.currentEnd);
+  
+  const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const daysElapsed = Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const daysRemaining = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const progress = Math.min(Math.max((daysElapsed / totalDays) * 100, 0), 100);
+  
+  return {
+    cycleStart: cycle.currentStart,
+    cycleEnd: cycle.currentEnd,
+    totalDays,
+    daysRemaining: Math.max(daysRemaining, 0),
+    progress: Math.round(progress),
+    isActive: cycle.isActive
+  };
 };
 
 // Payment history functions

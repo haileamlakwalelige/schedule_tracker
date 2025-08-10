@@ -51,7 +51,7 @@ export default function HelloWave() {
       >
         <Animated.View style={[styles.waveContainer, animatedStyle]}>
           <Text style={styles.text}>👋</Text>
-        </Animated.View>
+    </Animated.View>
       </LinearGradient>
     </View>
   );

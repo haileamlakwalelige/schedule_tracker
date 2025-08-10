@@ -2,9 +2,9 @@ export interface Employee {
   id: string;
   name: string;
   startDate: string;
-  endDate?: string;
+  endDate: string; // Required for salary cycle calculation
   salary: number;
-  salaryDate: number; // Day of month (1-31)
+  salaryDate: number; // Legacy field, kept for compatibility
   position: string;
   department: string;
   email?: string;
@@ -24,12 +24,6 @@ export interface PaymentRecord {
   notes?: string;
 }
 
-export interface PinSettings {
-  isEnabled: boolean;
-  pin: string;
-}
-
 export interface AppSettings {
-  pin: PinSettings;
   currency: 'ETB' | 'USD';
 } 
